@@ -1,4 +1,3 @@
-from build import *
 from board import *
 import unittest
 
@@ -42,22 +41,20 @@ MEDIUMSOLVEDGAMEBOARD = [6,3,7,8,5,1,2,9,4,
                          2,6,8,5,4,9,7,1,3,
                          3,4,5,7,1,2,6,8,9]
 
-class Solve_game_board_easy(unittest.TestCase):
+class build_board(unittest.TestCase):
+    def test_build(self):
+        board = Board(Solve)
+        full = False
+        if 0 not in board.getBoard():
+            full = True
 
-    def test_solve1(self):
-        solvedBoard = solve1(EASYGAMEBOARD,getZeroIndexes(EASYGAMEBOARD))
-        self.assertEqual(solvedBoard,EASYSOLVEDGAMEBOARD)
+        self.assertEqual(full, True)
 
+class solve_board_easy(unittest.TestCase):
+    def test_solve(self):
+        solved = Solve().solve(EASYGAMEBOARD)
+        self.assertEqual(solved,EASYSOLVEDGAMEBOARD)
 
-
-
-class Create_game_board(unittest.TestCase):
-
-    def test_buildBoard50(self):
-        solvedGameBoard = createGameBoard(50)
-        zeros = getZeroIndexes(solvedGameBoard)
-
-        self.assertEqual(0,len(zeros))
 
 if __name__ == "__main__":
     unittest.main()
