@@ -84,7 +84,7 @@ SOLVEDWORLHARDEST = [8,1,2,7,5,3,6,4,9,
 class Build_board(unittest.TestCase):
     def test_if_valid_board(self):
         board = Board(Solve,Validate)
-        valid = board.validate.validate(board.getBoard())
+        valid = Validate().validate(board.getBoard())
         self.assertEqual(valid, True)
 
     def test_failed_board_percent(self):
@@ -97,12 +97,12 @@ class Build_board(unittest.TestCase):
 
 class Solve_board_easy(unittest.TestCase):
     def test_solve(self):
-        solved = Board(Solve,Validate).solver.solve(EASYGAMEBOARD)
+        solved =Board(Solve,Validate).solver.solve(EASYGAMEBOARD)
         self.assertEqual(solved,EASYSOLVEDGAMEBOARD)
 
 class Solve_board_medium(unittest.TestCase):
     def test_solve(self):
-        solved = Board(Solve,Validate,MEDIUMGAMEBOARD).solver.solve(MEDIUMGAMEBOARD)
+        solved = Board(Solve,Validate).solver.solve(MEDIUMGAMEBOARD)
         self.assertEqual(solved,MEDIUMSOLVEDGAMEBOARD)
 """
 class solve_board_worldHardest(unittest.TestCase):
@@ -114,13 +114,13 @@ class solve_board_worldHardest(unittest.TestCase):
 class Validate_board(unittest.TestCase):
     def test_validate_pass(self):
         board = EASYSOLVEDGAMEBOARD
-        valid = Board(Solve,Validate).validate.validate(board)
+        valid = Validate().validate(board)
 
         self.assertEqual(valid,True)
 
     def test_validate_fail(self):
         board = NOTVALIDBOARD
-        valid = Board(Solve,Validate).validate.validate(board,errorLog=True)
+        valid = Validate().validate(board,errorLog=True)
 
         self.assertEqual(valid,False)
 
