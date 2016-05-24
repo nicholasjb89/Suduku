@@ -1,5 +1,6 @@
 from board import *
 import unittest
+import time
 
 NOTVALIDBOARD = [7, 4, 5, 9, 6, 3, 8, 2, 1,
                  3, 5, 7, 4, 1, 2, 6, 8, 9,
@@ -81,49 +82,76 @@ SOLVEDWORLHARDEST = [8,1,2,7,5,3,6,4,9,
                      4,3,8,5,2,6,9,1,7,
                      7,9,6,3,1,8,4,5,2]
 
+WORLDHARDESTWITH10MORE = [8,0,0,0,0,0,0,0,0,
+                          0,4,3,6,0,0,0,0,0,
+                          0,7,5,4,9,0,2,8,0,
+                          0,5,0,0,0,7,0,0,0,
+                          0,0,0,0,4,5,7,0,0,
+                          0,0,0,1,0,0,0,3,4,
+                          0,0,1,0,7,0,3,6,8,
+                          0,0,8,5,0,0,9,1,0,
+                          0,9,0,0,0,0,4,5,0]
+
 class Build_board(unittest.TestCase):
     def test_if_valid_board(self):
-        board = Board(Solve,Validate)
-        valid = Validate().validate(board.getBoard())
+        board = Board()
+        board.build()
+        fullBoard = board.getSolvedBoard()
+        valid = board.validate.validate(fullBoard)
         self.assertEqual(valid, True)
 
     def test_failed_board_percent(self):
         failed = 0
         for i in range(0,25):
-            board = Board(Solve,Validate)
+            board = Board()
+            board.build()
             failed += board.failed
-        print("Average fail rate = ", failed/25)
+        print("Average Board().build() fail rate =", failed/25)
         self.assertLess(failed/25,500)
+
+    def test_makeBoard(self):
+        board = Board()
+        board.build()
+        sudoku = board.getBoard()
+        solved = board.solver.solve(sudoku)
+
+        self.assertEqual(solved,board.getSolvedBoard())
 
 class Solve_board_easy(unittest.TestCase):
     def test_solve(self):
-        solved =Board(Solve,Validate).solver.solve(EASYGAMEBOARD)
+        board = Board()
+        solved = board.solver.solve(EASYGAMEBOARD)
         self.assertEqual(solved,EASYSOLVEDGAMEBOARD)
 
 class Solve_board_medium(unittest.TestCase):
     def test_solve(self):
-        solved = Board(Solve,Validate).solver.solve(MEDIUMGAMEBOARD)
+        board = Board()
+        solved = board.solver.solve(MEDIUMGAMEBOARD)
         self.assertEqual(solved,MEDIUMSOLVEDGAMEBOARD)
-"""
+
 class solve_board_worldHardest(unittest.TestCase):
     def test_solve(self):
         solved = Board(Solve,Validate).solver.solve(WORLDHARDEST)
-        self.assertEqual(solved,SOLVEDWORLHARDEST,displayBoard())
-"""
+        time.sleep(.2)
+
+        compare(solved,SOLVEDWORLHARDEST)
+        self.assertEqual(solved,SOLVEDWORLHARDEST,displayBoard(solved,"Worlds Hardest Board"))
+
 
 class Validate_board(unittest.TestCase):
     def test_validate_pass(self):
-        board = EASYSOLVEDGAMEBOARD
-        valid = Validate().validate(board)
+        board = Board()
+        valid = board.validate.validate(EASYSOLVEDGAMEBOARD)
 
         self.assertEqual(valid,True)
 
     def test_validate_fail(self):
-        board = NOTVALIDBOARD
-        valid = Validate().validate(board,errorLog=True)
+        board = Board()
+        valid = board.validate.validate(NOTVALIDBOARD)
 
         self.assertEqual(valid,False)
 
 if __name__ == "__main__":
     unittest.main()
+
 

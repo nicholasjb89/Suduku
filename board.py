@@ -1,7 +1,9 @@
 import random
 import copy
 
-def displayBoard(board):
+def displayBoard(board, header = ""):
+    print()
+    print(header)
     print()
     row = []
     col = 1
@@ -25,51 +27,26 @@ def displayBoard(board):
         print(row[i], end=" ")
     print()
 
+def compare(board1,board2):
+    """
+    :param board1: Board list
+    :param board2: Board list
+    :return: Void
+    """
+
+    different = []
+
+    for i in range(len(board1)):
+        if board1[i] == board2[i]:
+            different.append(" ")
+        else:
+            different.append(board1[i])
+
+    displayBoard(different)
+
 class Validate():
-    def getSquareIndexes(self,index):
-        squareIndexes = (0,1,2,9,10,11,18,19,20),\
-                        (3,4,5,12,13,14,21,22,23),\
-                        (6,7,8,15,16,17,24,25,26),\
-                        (27,28,29,36,37,38,45,46,47),\
-                        (30,31,32,39,40,41,48,49,50),\
-                        (33,34,35,42,43,44,51,52,53),\
-                        (54,55,56,63,64,65,72,73,74),\
-                        (57,58,59,66,67,68,75,76,77),\
-                        (60,61,62,69,70,71,78,79,80)
-        indexes = []
-        for square in squareIndexes:
-            if index in square:
-                for i in square:
-                    indexes.append(i)
-        return indexes
-
-    def getRowIndexes(self, index):
-        indexes = []
-
-        offset = index%9
-        index -= offset
-
-        for i in range(index,index+9):
-            indexes.append(i)
-
-        return indexes
-
-    def getColIndexes(self,index):
-        indexes = []
-        while True:
-        #start at the begining of the collumn
-            if index - 9 >= 0:
-                index -= 9
-            else:
-                break
-        while True:
-            indexes.append(index)
-            index += 9
-
-            if index >= 81:
-                break
-
-        return indexes
+    def __init__(self, boardClass):
+        self.Board = boardClass
 
     def isRepeated(self, number, indexes, board):
         count = 0
@@ -82,7 +59,7 @@ class Validate():
         else:
             return False
 
-    def validateBoard(self,board):
+    def validateBoard(self, board):
         f_missingIndex = False
         missingIndexPositions = []
         f_repeatedNumber = False
@@ -90,9 +67,9 @@ class Validate():
         for i in range(0,81):
             n = board[i]
             indexNumPair = (i,n)
-            row = self.getRowIndexes(i)
-            col = self.getColIndexes(i)
-            square = self.getSquareIndexes(i)
+            row = self.Board.getRowIndexes(i)
+            col = self.Board.getColIndexes(i)
+            square = self.Board.getSquareIndexes(i)
             if n == 0:
                 f_missingIndex = True
                 missingIndexPositions.append(i)
@@ -133,7 +110,6 @@ class Validate():
                         failBoard.append(" ")
                 else:
                         failBoard.append(" ")
-            displayBoard(failBoard)
 
         if f_repeatedNumber or f_missingIndex:
             return False
@@ -141,23 +117,44 @@ class Validate():
             return True
 
 class Solve():
-    def __init__(self,validateClass):
-        self.validate = validateClass
+    def __init__(self,boardClass):
+        self.Board = boardClass
+
+    def findMostValuableIndexes(self,board):
+        """
+        This will look at the board and try to find what indexes are the most valuable.
+        Valuable will ve if a number is put in that index more of the board will be solvable
+        Also cant have too many pssable numbers for each valuable number index. i would say 3 max though this is
+        semi random number.
+        :param board: board list
+        :return: list of most valuableindexes
+        """
+        valuableIndexes = []
+        for index in self.Board.getMissingIndexes(board):
+            possableNumbers = self.getValidNumbers(index,board)
+            if len(possableNumbers) <= 3:
+                valuableIndexes.append(index)
+        return valuableIndexes
+
+    def getValidNumbers(self, index, board):
+        numbers = []
+        square = self.Board.getSquareNumbers(index,board)
+        row = self.Board.getRowNumbers(index,board)
+        col = self.Board.getColNumbers(index,board)
+
+        for n in square:
+            if n in row and n in col:
+                numbers.append(n)
+
+        return numbers
 
     def alg1(self, board):
-        missingIndexes = self.getMissingIndexes(board)
+        missingIndexes = self.Board.getMissingIndexes(board)
 
         f_solvable = False
         while True:
             for index in missingIndexes:
-                col = self.getColNumbers(index, board)
-                row = self.getRowNumbers(index, board)
-                square = self.getSquareNumbers(index, board)
-
-                validNumbers = []
-                for n in col:
-                    if n in row and n in square:
-                        validNumbers.append(n)
+                validNumbers = self.getValidNumbers(index, board)
                 if len(validNumbers) == 1:
                     board[index] = validNumbers[0]
                     missingIndexes.remove(index)
@@ -171,19 +168,53 @@ class Solve():
             f_solvable = False
 
     def alg2(self,board):
-        pass
+        missingIndexes = self.Board.getMissingIndexes(board)
+
+        f_solvable = False
+        while True:
+
+            for index in missingIndexes:
+
+                squareIndexes = self.Board.getSquareIndexes(index)
+                squareMissingIndexes = []
+
+                #find all the missing indexed ins the square
+                for i in squareIndexes:
+                    if board[i] == 0:
+                        squareMissingIndexes.append(i)
+
+                #find all the possable numbers that could go in this index
+                validNumbers = self.getValidNumbers(index, board)
+
+                #loop through all the numbers to see if we can elimenate all but one index for the number
+                for n in validNumbers:
+                    tempBoard = copy.copy(board)
+                    for i in squareMissingIndexes:
+                        if n not in self.Board.getRowNumbers(i,board) or n not in self.Board.getColNumbers(i,board):
+                            if i != index:
+                                tempBoard[i] = n
+
+                    missing = 0
+                    for i in self.Board.getSquareIndexes(i):
+                        if tempBoard[i] == 0:
+                            missing += 1
+                    if missing == 1:
+
+                        board[index] = n
+                        missingIndexes = self.Board.getMissingIndexes(board)
+                        f_solvable = True
+                        break
+            if f_solvable == False or len(missingIndexes) == 0:
+                return board
+
+            f_solvable = False
+        return board
 
     def charleyAlg(self,board):
         """this is charleys brute force alg"""
+        for i in self.Board.getMissingIndexes(board):
+            validNumbers = self.getValidNumbers(i, board)
 
-        for i in self.getMissingIndexes(board):
-            row = self.getRowNumbers(i,board)
-            col = self.getColNumbers(i,board)
-            square = self.getSquareNumbers(i,board)
-            validNumbers = []
-            for n in row:
-                if n in col and n in square:
-                    validNumbers.append(n)
             try:
                 board[i] = random.choice(validNumbers)
             except:
@@ -191,25 +222,65 @@ class Solve():
 
         return board
 
-    def solve(self,board):
+    def solve(self,board, useCharleyAlg = True):
         board = self.alg1(board)
+        board = self.alg2(board)
+        if not useCharleyAlg:
+            return board
+
         bestBoard = board
         "This is the Game Board before Brute Force"
-        if Validate().validate(board):
+        if self.Board.validate.validate(board):
             return board
         else:
             i = 0
+            valuedIndexes = self.findMostValuableIndexes(board)
+            seedBoard = copy.copy(board)
+            for index in valuedIndexes:
+                try:
+                    seedBoard[index] = random.choice(self.getValidNumbers(index,seedBoard))
+                except:
+                    continue
+
+            tempBoard = copy.copy(seedBoard)
+            tempBoard = self.alg1(tempBoard)
+            tempBoard = self.alg2(tempBoard)
             while True:
                 i += 1
-                tempBoard = self.charleyAlg(copy.copy(board))
-                if len(self.getMissingIndexes(tempBoard)) < len(self.getMissingIndexes(bestBoard)):
+
+                tempBoard = self.charleyAlg(tempBoard)
+                if len(self.Board.getMissingIndexes(tempBoard)) < len(self.Board.getMissingIndexes(bestBoard)):
                     bestBoard = tempBoard
+                if i%25 == 0:
+                    seedBoard = copy.copy(board)
+                    for index in valuedIndexes:
+                        try:
+                            seedBoard[index] = random.choice(self.getValidNumbers(index,seedBoard))
+                        except:
+                            continue
+
+
+                    tempBoard = copy.copy(seedBoard)
+                    tempBoard = self.alg1(tempBoard)
+                    tempBoard = self.alg2(tempBoard)
 
                 if(i%1000 == 0):
-                    print("attempts made: ",  i)
+                    print("Charley Alg attempts made: ",  i)
                     displayBoard(bestBoard)
-                if Validate().validate(tempBoard):
+
+                if i == 100000:
+                    # if there are more than 10K attempts stop trying to solve and return False
+                    print("after 100000 attempts it could not be solved")
+                    return bestBoard
+
+                if self.Board.validate.validate(tempBoard):
+                    print("Charley Alg Total Attempts = ", i)
                     return tempBoard
+
+class Board():
+    def __init__(self, solveClass = Solve, validateClass = Validate):
+        self.solver = solveClass(self)
+        self.validate = validateClass(self)
 
     def getRowNumbers(self, index, board):
         validNumbers = list(range(1,10))
@@ -265,26 +336,69 @@ class Solve():
 
         return validNumbers
 
-    def getMissingIndexes(self,board):
+    def getMissingIndexes(self,theList):
+        """
+        :param theList: could be an single dim list. could use a square, row, col, or board
+        :return: all the Zeros in the given list
+        """
         indexes = []
-        for i in range(0,81):
-            if board[i] == 0:
+        for i in range(0,len(theList)):
+            if theList[i] == 0:
                 indexes.append(i)
         return indexes
 
-class Board():
-    def __init__(self, solveClass, validateClass):
-        self.solver = solveClass(validateClass)
-        self.validate = validateClass()
-        self.build()
+    def getSquareIndexes(self,index):
+        squareIndexes = (0,1,2,9,10,11,18,19,20),\
+                        (3,4,5,12,13,14,21,22,23),\
+                        (6,7,8,15,16,17,24,25,26),\
+                        (27,28,29,36,37,38,45,46,47),\
+                        (30,31,32,39,40,41,48,49,50),\
+                        (33,34,35,42,43,44,51,52,53),\
+                        (54,55,56,63,64,65,72,73,74),\
+                        (57,58,59,66,67,68,75,76,77),\
+                        (60,61,62,69,70,71,78,79,80)
+        indexes = []
+        for square in squareIndexes:
+            if index in square:
+                for i in square:
+                    indexes.append(i)
+        return indexes
+
+    def getRowIndexes(self, index):
+        indexes = []
+
+        offset = index%9
+        index -= offset
+
+        for i in range(index,index+9):
+            indexes.append(i)
+
+        return indexes
+
+    def getColIndexes(self,index):
+        indexes = []
+        while True:
+        #start at the begining of the collumn
+            if index - 9 >= 0:
+                index -= 9
+            else:
+                break
+        while True:
+            indexes.append(index)
+            index += 9
+
+            if index >= 81:
+                break
+
+        return indexes
 
     def attemptBuild(self):
-        self.board = [0] * 81
+        self.solvedBoard = [0] * 81
         for i in range(81):
-            tempBoard = self.getBoard()
-            rowNums = self.solver.getRowNumbers(i, tempBoard)
-            colNums = self.solver.getColNumbers(i, tempBoard)
-            squareNums = self.solver.getSquareNumbers(i, tempBoard)
+            tempBoard = self.getSolvedBoard()
+            rowNums = self.getRowNumbers(i, tempBoard)
+            colNums = self.getColNumbers(i, tempBoard)
+            squareNums = self.getSquareNumbers(i, tempBoard)
 
             validNumbers = []
 
@@ -292,21 +406,36 @@ class Board():
                 if n in colNums and n in squareNums:
                     validNumbers.append(n)
             try:
-                self.board[i] = random.choice(validNumbers)
+                self.solvedBoard[i] = random.choice(validNumbers)
 
             except:
                 break
+
+    def makeSolvableBoard(self, totalRemoved = 40):
+        """ takes a full board anc makes a board for players to solve """
+        board = self.getSolvedBoard()
+        while totalRemoved != 0:
+            indexes = list(range(0,81))
+            rIndex = random.choice(indexes)
+            tempBoard = copy.copy(board)
+            tempBoard[rIndex] = 0
+            if self.solver.solve(tempBoard, useCharleyAlg=False):
+                board[rIndex] = 0
+                totalRemoved -= 1
+        self.board = board
 
     def build(self):
         self.failed = 0
         while True:
             self.attemptBuild()
-            if self.validate.validate(self.board):
+            if self.validate.validate(self.solvedBoard):
                 break
             self.failed += 1
 
+        self.makeSolvableBoard()
+
+    def getSolvedBoard(self):
+        return copy.copy(self.solvedBoard)
+
     def getBoard(self):
         return copy.copy(self.board)
-
-
-
