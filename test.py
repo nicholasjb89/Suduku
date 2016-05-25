@@ -91,7 +91,7 @@ WORLDHARDESTWITH10MORE = [8,0,0,0,0,0,0,0,0,
                           0,0,1,0,7,0,3,6,8,
                           0,0,8,5,0,0,9,1,0,
                           0,9,0,0,0,0,4,5,0]
-
+"""
 class Build_board(unittest.TestCase):
     def test_if_valid_board(self):
         board = Board()
@@ -128,7 +128,31 @@ class Solve_board_medium(unittest.TestCase):
         board = Board()
         solved = board.solver.solve(MEDIUMGAMEBOARD)
         self.assertEqual(solved,MEDIUMSOLVEDGAMEBOARD)
+"""
+class Solve_mass_board(unittest.TestCase):
+    def test_solve_hard(self):
+        path = "C:\\Users\\Bailey\\Documents\\GitHub\\Suduku\\Hard.txt"
+        board = Board()
+        f_solved = True
+        failed = 0
+        solved = 0
+        i = 0
+        for b in textToBoard(path):
+            if failed == 10:
+                break
+            i+= 1
+            solve = board.solver.solve(b)
+            displayBoard(solve)
+            if not board.validate.validate(solve):
 
+                f_solved = False
+                failed += 1
+            else:
+                solved += 1
+
+        msg = "Total solved=",solved, "Total failed=", failed
+        self.assertEqual(f_solved,True,msg=msg)
+"""
 class solve_board_worldHardest(unittest.TestCase):
     def test_solve(self):
         solved = Board(Solve,Validate).solver.solve(WORLDHARDEST)
@@ -150,6 +174,22 @@ class Validate_board(unittest.TestCase):
         valid = board.validate.validate(NOTVALIDBOARD)
 
         self.assertEqual(valid,False)
+"""
+class TextToBoard(unittest.TestCase):
+
+    def test_textToSolvableBoard(self):
+        path = "C:\\Users\\Bailey\\Documents\\GitHub\\Suduku\\Hard.txt"
+        boards = textToBoard(path)
+        f_is_board = True
+        for board in boards:
+            if not isBoard(board):
+                f_is_board = False
+                break
+        self.assertEqual(f_is_board, True)
+
+    def test_isBoard(self):
+        self.assertEqual(isBoard(WORLDHARDEST),True)
+
 
 if __name__ == "__main__":
     unittest.main()

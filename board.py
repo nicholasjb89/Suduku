@@ -1,6 +1,52 @@
 import random
 import copy
 
+def isBoard(board):
+    """
+    Test to see if it is a legit board or not
+    Will not test to see if it is solvable just make sure its a board that can
+    run thought the solver
+    :param board:
+    :return: Bool
+    """
+    if type(board) != type(list()):
+        print(type(board), type(list()))
+        return False
+    elif len(board) != 81:
+        print(len(board))
+        return False
+    for n in board:
+        if n not in range(0,10):
+            return False
+
+    return True
+
+
+def textToBoard(path):
+    """
+    :param path:
+    :return: 2 Dim list that is all the boards in the text file
+    """
+    file = open(path, mode="r")
+
+    all = []
+    for line in file:
+        board = []
+        for char in line:
+            if char == ".":
+                board.append(0)
+            else:
+                try:
+                    board.append(int(char))
+                except:
+                    continue
+        if board != []:
+            all.append(board)
+
+    file.close()
+
+    return all
+
 def displayBoard(board, header = ""):
     print()
     print(header)
@@ -120,7 +166,7 @@ class Solve():
     def __init__(self,boardClass):
         self.Board = boardClass
 
-    def findMostValuableIndexes(self,board):
+    def findMostValuableIndexes(self,board,adjust2):
         """
         This will look at the board and try to find what indexes are the most valuable.
         Valuable will ve if a number is put in that index more of the board will be solvable
@@ -129,11 +175,30 @@ class Solve():
         :param board: board list
         :return: list of most valuableindexes
         """
+        two = []
+        three = []
         valuableIndexes = []
         for index in self.Board.getMissingIndexes(board):
             possableNumbers = self.getValidNumbers(index,board)
-            if len(possableNumbers) <= 3:
+            if len(possableNumbers) == 3:
+                three.append(index)
+            elif len(possableNumbers) == 2:
+                two.append(index)
+
+        for index in two:
+            if len(valuableIndexes) != adjust2:
                 valuableIndexes.append(index)
+            else:
+                return valuableIndexes
+
+        remaining = adjust2-len(valuableIndexes)
+
+        for i in range(0,remaining):
+            try:
+                valuableIndexes.append(three[i])
+            except:
+                break
+
         return valuableIndexes
 
     def getValidNumbers(self, index, board):
@@ -222,7 +287,7 @@ class Solve():
 
         return board
 
-    def solve(self,board, useCharleyAlg = True):
+    def solve(self,board, useCharleyAlg = True,adjust1 = 10, adjust2 = 10):
         board = self.alg1(board)
         board = self.alg2(board)
         if not useCharleyAlg:
@@ -234,7 +299,7 @@ class Solve():
             return board
         else:
             i = 0
-            valuedIndexes = self.findMostValuableIndexes(board)
+            valuedIndexes = self.findMostValuableIndexes(board,adjust1)
             seedBoard = copy.copy(board)
             for index in valuedIndexes:
                 try:
@@ -251,7 +316,7 @@ class Solve():
                 tempBoard = self.charleyAlg(tempBoard)
                 if len(self.Board.getMissingIndexes(tempBoard)) < len(self.Board.getMissingIndexes(bestBoard)):
                     bestBoard = tempBoard
-                if i%25 == 0:
+                if i%adjust2 == 0:
                     seedBoard = copy.copy(board)
                     for index in valuedIndexes:
                         try:
@@ -259,18 +324,13 @@ class Solve():
                         except:
                             continue
 
-
                     tempBoard = copy.copy(seedBoard)
                     tempBoard = self.alg1(tempBoard)
                     tempBoard = self.alg2(tempBoard)
 
-                if(i%1000 == 0):
-                    print("Charley Alg attempts made: ",  i)
-                    displayBoard(bestBoard)
-
-                if i == 100000:
+                if i == 20000:
                     # if there are more than 10K attempts stop trying to solve and return False
-                    print("after 100000 attempts it could not be solved")
+                    print("after 20000 attempts it could not be solved")
                     return bestBoard
 
                 if self.Board.validate.validate(tempBoard):
